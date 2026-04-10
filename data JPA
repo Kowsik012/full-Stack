@@ -1,0 +1,51 @@
+H2 Database Configuration (application.properties):
+spring.datasource.url=jdbc:h2:mem:testdb
+spring.datasource.driverClassName=org.h2.Driver
+spring.datasource.username=sa
+spring.datasource.password=
+spring.jpa.database-platform=org.hibernate.dialect.H2Dialect
+spring.h2.console.enabled=true
+spring.jpa.hibernate.ddl-auto=update
+Student Entity:
+@Entity
+public class Student {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    private String name;
+    private int age;
+    // Getters and Setters
+}
+Repository Interface:
+@Repository
+public interface StudentRepository extends JpaRepository<Student, Long> {}
+REST Controller:
+@RestController
+@RequestMapping("/students")
+public class StudentController {
+    @Autowired private StudentRepository repository;
+    @PostMapping
+    public Student addStudent(@RequestBody Student student) {
+        return repository.save(student);
+    }
+    @GetMapping("/{id}")
+    public Student getStudent(@PathVariable Long id) {
+        return repository.findById(id).orElseThrow();
+    }
+    @GetMapping
+    public List<Student> getAllStudents() {
+        return repository.findAll();
+    }
+    @PutMapping("/{id}")
+    public Student updateStudent(@PathVariable Long id, @RequestBody Student newStudent) {
+        return repository.findById(id).map(student -> {
+            student.setName(newStudent.getName());
+            student.setAge(newStudent.getAge());
+            return repository.save(student);
+        }).orElseThrow();
+    }
+    @DeleteMapping("/{id}")
+    public void deleteStudent(@PathVariable Long id) {
+        repository.deleteById(id);
+    }
+}
